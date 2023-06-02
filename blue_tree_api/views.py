@@ -204,7 +204,7 @@ class UpdateStatusPolicy(APIView):
         except:
             return Response(False,status=status.HTTP_401_UNAUTHORIZED)
 
-class GetTypeGroup(APIView):
+class GetTypeGroup(APIView): #api
     def get(self):
         try:
             type = TypeGroup.objects.using(db_blue_tree).all().values()
