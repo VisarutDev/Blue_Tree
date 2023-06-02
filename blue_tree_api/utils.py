@@ -13,6 +13,7 @@ JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_SECONDS = 120
 JWT_EXP_DELTA_SECONDS_REFRESH = 1800
 
+db_blue_tree = 'db_blue_tree'
 def create_access_token(user):
     payload = {
         'user_id': user,
