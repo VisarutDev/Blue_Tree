@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3^^^g((#0r@)w8pxu6jok=a$m7jsvi7z(@v+nyo3p!7mzuk3sp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['bluetree-production.up.railway.app']
 
 
 # Application definition
