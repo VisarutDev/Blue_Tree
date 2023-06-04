@@ -1,0 +1,18 @@
+asgiref @ file:///Users/ec2-user/ci_py311/asgiref_1678390266874/work
+certifi==2023.5.7
+chardet==3.0.4
+Django @ file:///Users/ec2-user/ci_py311/django_1678411010555/work
+djangorestframework @ file:///home/conda/feedstock_root/build_artifacts/djangorestframework_1663854154474/work
+encode==0.0.0
+h11==0.8.1
+h2==3.2.0
+hpack==3.0.0
+hyperframe==5.2.0
+idna==2.10
+Pillow==9.5.0
+psycopg2-binary==2.9.6
+PyJWT==1.7.1
+pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1680088766131/work
+rfc3986==1.5.0
+simplejson==3.19.1
+sqlparse @ file:///Users/ec2-user/ci_py311/sqlparse_1678394278812/work
