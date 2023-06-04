@@ -187,7 +187,7 @@ class FromForDetails(APIView):
         except:
             return Response(False,status=status.HTTP_401_UNAUTHORIZED)
 
-class UpdateStatusPolicy(APIView):
+class UpdateStatusPolicy(APIView): #api
     def put(self, request):
         try:
             data = request.data
