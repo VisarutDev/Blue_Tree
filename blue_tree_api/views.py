@@ -1,3 +1,4 @@
+from email.policy import default
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -204,10 +205,14 @@ class UpdateStatusPolicy(APIView):
         except:
             return Response(False,status=status.HTTP_401_UNAUTHORIZED)
 
-class GetTypeGroup(APIView):
-    def get(self):
+class GetTypeGroup(APIView): #api
+    def get(self, request):
         try:
             type = TypeGroup.objects.using(db_blue_tree).all().values()
-            return Response(type)
+            res = {
+                'msg' : True,
+                'data' : type
+            }
+            return Response(res,status=status.HTTP_200_OK)
         except:
             return Response(False)
