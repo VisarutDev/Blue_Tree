@@ -74,13 +74,13 @@ WSGI_APPLICATION = 'blue_tree.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-db_blue_tree = "db_blue_tree"
+db_blue_tree = "default"
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
+    # },
     # 'db_blue_tree': {
     #     'ENGINE': 'django.db.backends.mysql',
     #     'NAME': 'v4dbt01n',
@@ -90,14 +90,14 @@ DATABASES = {
     #     'PORT': '3306',
     #     'OPTIONS': {'charset': 'utf8mb4'},
     # },
-    # 'db_blue_tree' : {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME' : '',
-    #     'USER': '',
-    #     'PASSWORD': '',
-    #     'HOST': 'database-1.cf6tufis7rpf.us-east-2.rds.amazonaws.com',
-    #     'PORT': '3306',
-    # }
+    'default' : {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME' : 'railway',
+        'USER': 'postgres',
+        'PASSWORD': 'g2L3MaGwfXDrPRv4txyK',
+        'HOST': 'containers-us-west-111.railway.app',
+        'PORT': '7659',
+    }
 }
 
 

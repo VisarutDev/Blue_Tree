@@ -8,5 +8,6 @@ urlpatterns = [
     path('check_user',views.UserTestRefreshToken.as_view()),
     path('register',views.Register.as_view()),
     path('check',views.Apicheck.as_view()),
-    path('from_for_details',views.FromForDetails.as_view())
+    path('from_for_details',views.FromForDetails.as_view()),
+    path('get/test',views.GetTypeGroup.as_view())
 ]
