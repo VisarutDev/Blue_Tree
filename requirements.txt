@@ -1,4 +1,4 @@
-asgiref @ file:///Users/ec2-user/ci_py311/asgiref_1678390266874/work
+# asgiref @ file:///Users/ec2-user/ci_py311/asgiref_1678390266874/work
 certifi==2023.5.7
 chardet==3.0.4
 Django @ file:///Users/ec2-user/ci_py311/django_1678411010555/work
