@@ -13,6 +13,7 @@ class UserBooking(models.Model):
     booking_tel = models.IntegerField(default=0)
     booking_voucher_code = models.CharField(max_length=55, blank=True, null=True, default=None)
     booking_booking_id = models.CharField(max_length=55, blank=True, null=True, default=None)
+    # booking_status = models.BooleanField(default=0)
     create_at = models.DateTimeField(auto_now_add=True, blank=True)
     update_at = models.DateTimeField(auto_now=True, blank=True)
 
@@ -28,6 +29,7 @@ class UserBooking(models.Model):
             'booking_email' : self.booking_email,
             'booking_voucher_code' : self.booking_voucher_code,
             'booking_booking_id' : self.booking_booking_id,
+            # 'booking_status' : self.booking_status,
             'create_at' : self.create_at,
             'update_at' : self.update_at
         }

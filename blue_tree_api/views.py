@@ -83,7 +83,11 @@ class GetBookingByAgent(APIView):
             }
             return Response(res,status = status.HTTP_200_OK)
         except:
-            return Response(False,status = status.HTTP_401_UNAUTHORIZED)
+            res = {
+                'msg' : False,
+                'data' : 'no booking'
+            }
+            return Response(res,status = status.HTTP_401_UNAUTHORIZED)
 
 class GetBookingByChoose(APIView):
     def get(self, request):
@@ -127,7 +131,10 @@ class FromForDetails(APIView):
             data = request.GET.get
             booking = data("booking_id")
             booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = booking).jsonFormat()
-            info = InformationDetailList.objects.using(db_blue_tree).filter(info_detail_info = booking_id.booking_id).values()
+            try:
+                info = InformationDetailList.objects.using(db_blue_tree).filter(info_list_info_id = booking_id['booking_id']).values()
+            except:
+                info = 'no informaion'
             res = {
                 'msg' : True,
                 'data' : {
@@ -145,32 +152,36 @@ class FromForDetails(APIView):
             data = request.data
             guests = data['guest']
             data_detail = {
+                'info_detail_info_id' : data['booking_id'],
                 'info_detail_country' : data['country'] if "country" in data else None,
                 'info_detail_live_phuket' : data['live_in'] if "live_in" in data else None,
                 'info_detail_people' : data['people'] if "people" in data else None,
-                'info_detail_type' : data['with'] if "with" in data else None
+                'info_detail_type_id' : data['with'] if "with" in data else None
             }
             data_booking = {
-                'booking_first_name' : guests[0]['first_name'],
-                'booking_last_name' : guests[0]['last_name'],
+                'booking_customer_first_name' : guests[0]['first_name'],
+                'booking_customer_last_name' : guests[0]['last_name'],
                 'booking_age' : guests[0]['age'],
                 'booking_gender' : guests[0]['gender'],
                 'booking_email' : guests[0]['Email'],
-                'booking_tel' : guests[0]['tel']
+                'booking_tel' : guests[0]['tel'],
+                # 'booking_booking_id' : data['booking_id']
             }
-            # UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update_or_create(**data_booking)
-            # InformationDetail.objects.using(db_blue_tree).create(**data_detail)
+            UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update_or_create(**data_booking)
+            InformationDetail.objects.using(db_blue_tree).filter(info_detail_info = data['booking_id']).update_or_create(**data_detail)
+            info_id = InformationDetail.objects.using(db_blue_tree).get(info_detail_info = data['booking_id'])
             del guests[0]
             if data['people'] < 10:
                 for guest in guests:
+                    data_list = []
                     data_list = {
                             'info_list_first_name' : guest['first_name'],
                             'info_list_last_name' : guest['last_name'],
                             'info_list_age' : guest['age'],
                             'info_list_gender' : guest['gender'],
-                            'info_list_info' : data['booking_id']
+                            'info_list_info_id' : info_id.info_detail_id
                         }
-                    # InformationDetailList.objects.using(db_blue_tree).create(**data_list)
+                    InformationDetailList.objects.using(db_blue_tree).filter(info_list_info_id = info_id.info_detail_id,info_list_first_name = guest['first_name']).update_or_create(**data_list)
                     data_guest_list.append(data_list)
             else:
                 pass
@@ -185,6 +196,7 @@ class FromForDetails(APIView):
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
+            raise
             return Response(False,status=status.HTTP_401_UNAUTHORIZED)
 
 class UpdateStatusPolicy(APIView): #api
