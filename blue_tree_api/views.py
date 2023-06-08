@@ -7,6 +7,11 @@ from django.db.models import Q
 from .models import *
 from blue_tree.settings import db_blue_tree
 from .utils import create_access_token, create_refresh_token, verify_access_token, verify_refresh_token, Hash
+import base64
+# from PIL import Image
+from django.core.files.base import ContentFile
+from io import StringIO, BytesIO
+import io
 
 # Create your views here.
 class CreateToken(APIView):
@@ -70,13 +75,17 @@ class GetBookingByAgent(APIView):
             agent = data("agent_name") if data("agent_name") is not None else None
             voucher_code = data("voucher_code") if data("voucher_code") is not None else None
             booking_id = data("booking_id") if data("booking_id") is not None else None
+            booking_data = UserBooking.objects.using(db_blue_tree).all()
+            if booking_id != None:
+                print("booking")
+                booking_data = booking_data.filter(booking_booking_id = booking_id)
             if agent != None:
-                filter = Q(booking_agent_com = agent)
-            elif voucher_code != None:
-                filter = Q(booking_voucher_code = voucher_code)
-            elif booking_id != None:
-                filter = Q(booking_booking_id = booking_id)
-            booking_data = UserBooking.objects.using(db_blue_tree).get(filter).jsonFormat()
+                print('agent')
+                booking_data = booking_data.filter(booking_agent_com = agent)
+            if voucher_code != None:
+                print('voucher')
+                booking_data = booking_data.filter(booking_voucher_code = voucher_code)
+            booking_data = booking_data.values()
             res = {
                 'msg' : True,
                 'data' : booking_data
@@ -151,13 +160,6 @@ class FromForDetails(APIView):
             data_guest_list = []
             data = request.data
             guests = data['guest']
-            data_detail = {
-                'info_detail_info_id' : data['booking_id'],
-                'info_detail_country' : data['country'] if "country" in data else None,
-                'info_detail_live_phuket' : data['live_in'] if "live_in" in data else None,
-                'info_detail_people' : data['people'] if "people" in data else None,
-                'info_detail_type_id' : data['with'] if "with" in data else None
-            }
             data_booking = {
                 'booking_customer_first_name' : guests[0]['first_name'],
                 'booking_customer_last_name' : guests[0]['last_name'],
@@ -165,14 +167,39 @@ class FromForDetails(APIView):
                 'booking_gender' : guests[0]['gender'],
                 'booking_email' : guests[0]['Email'],
                 'booking_tel' : guests[0]['tel'],
-                # 'booking_booking_id' : data['booking_id']
+                'booking_booking_id' : data['booking_id'] if 'booking_id' in data else None
             }
-            UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update_or_create(**data_booking)
-            InformationDetail.objects.using(db_blue_tree).filter(info_detail_info = data['booking_id']).update_or_create(**data_detail)
-            info_id = InformationDetail.objects.using(db_blue_tree).get(info_detail_info = data['booking_id'])
+            # booking_id, update = UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update_or_create(**data_booking)
+            try:
+                booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = data['booking_id'])
+                UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update(**data_booking)
+                print("update")
+            except:
+                UserBooking.objects.using(db_blue_tree).create(**data_booking)
+                booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = data['booking_id'])
+                print("create")
+            booking = booking_id.booking_id
+            data_detail = {
+                'info_detail_info_id' : booking,
+                'info_detail_country' : data['country'] if "country" in data else None,
+                'info_detail_live_phuket' : data['live_in'] if "live_in" in data else None,
+                'info_detail_people' : data['people'] if "people" in data else None,
+                'info_detail_type_id' : data['with'] if "with" in data else None
+            }
+            info_id ,update = InformationDetail.objects.using(db_blue_tree).filter(info_detail_info = booking).update_or_create(**data_detail)
             del guests[0]
-            if data['people'] < 10:
-                for guest in guests:
+
+            get_info_list = InformationDetailList.objects.using(db_blue_tree).filter(info_list_info_id = info_id.info_detail_id)
+            print(len(get_info_list))
+            print("list_id :",info_id.info_detail_id)
+
+            if len(get_info_list) == 0:
+                get_info_list = data['guest']
+            
+            type_group = TypeGroup.objects.using(db_blue_tree).filter(type_group_people__gte = data['people'])
+            # if data['people'] < 10:
+            if type_group.type_group_file:
+                for guest, info_list in zip(guests,get_info_list):
                     data_list = []
                     data_list = {
                             'info_list_first_name' : guest['first_name'],
@@ -181,10 +208,34 @@ class FromForDetails(APIView):
                             'info_list_gender' : guest['gender'],
                             'info_list_info_id' : info_id.info_detail_id
                         }
-                    InformationDetailList.objects.using(db_blue_tree).filter(info_list_info_id = info_id.info_detail_id,info_list_first_name = guest['first_name']).update_or_create(**data_list)
+                    # InformationDetailList.objects.using(db_blue_tree).filter(info_list_info_id = info_id.info_detail_id,info_list_id = info_list_id).update_or_create(**data_list)
+                    try:
+                        info_list_id = info_list.info_list_id
+                        InformationDetailList.objects.using(db_blue_tree).filter(info_list_info_id = info_id.info_detail_id,info_list_id = info_list_id).update(**data_list)
+                        print('update')
+                    except:
+                        InformationDetailList.objects.using(db_blue_tree).create(**data_list)
+                        print('create')
                     data_guest_list.append(data_list)
             else:
                 pass
+                # image_64_encode = data['file']
+                # format,imgstr = image_64_encode.split(';base64,')
+                # image_ascii = imgstr.encode("ascii")
+                # decoded = base64.decodebytes(image_ascii)
+                # raw_img_io = io.BytesIO(decoded)
+                # imgstr = Image.open(raw_img_io)
+                # imgstr = imgstr.resize((480, 320))
+                # img_io = io.BytesIO()
+                # imgstr.save(img_io, format.split("/")[1], quality=80)
+                # store_image = ContentFile(img_io.getvalue(), name= str(payload['user_id']) + str(datetime.utcnow()) + "." + str(format.split("/")[1]))
+
+                # set_file = ({"store_name":store.store_name_th, "store_receipt":str(img_url)+str(order_file.order_file_store1)})
+                # data_file = {
+                #     'info_detail_file' : set_file,
+                #     'info_detail_file_info' : info_id.info_detail_id
+                # }
+                # InformationDetailFile.objects.using(db_blue_tree).create(**data_file)
 
             res = {
                 'msg' : True,
@@ -196,7 +247,6 @@ class FromForDetails(APIView):
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
-            raise
             return Response(False,status=status.HTTP_401_UNAUTHORIZED)
 
 class UpdateStatusPolicy(APIView): #api
