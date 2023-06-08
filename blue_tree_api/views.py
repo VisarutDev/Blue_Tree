@@ -75,6 +75,9 @@ class GetBookingByAgent(APIView):
             agent = data("agent_name") if data("agent_name") is not None else None
             voucher_code = data("voucher_code") if data("voucher_code") is not None else None
             booking_id = data("booking_id") if data("booking_id") is not None else None
+            customer_first_name = data("customer_first_name") if data("customer_first_name") is not None else None
+            customer_last_name = data("customer_last_name") if data("customer_last_name") is not None else None
+            email = data("email") if data("email") is not None else None
             booking_data = UserBooking.objects.using(db_blue_tree).all()
             if booking_id != None:
                 print("booking")
@@ -85,6 +88,15 @@ class GetBookingByAgent(APIView):
             if voucher_code != None:
                 print('voucher')
                 booking_data = booking_data.filter(booking_voucher_code = voucher_code)
+            if customer_first_name != None:
+                print('first_name')
+                booking_data = booking_data.filter(booking_customer_first_name = customer_first_name)
+            if customer_last_name != None:
+                print('last_name')
+                booking_data = booking_data.filter(booking_customer_last_name = customer_last_name)
+            if email != None:
+                print('email')
+                booking_data = booking_data.filter(booking_email = email)
             booking_data = booking_data.values()
             res = {
                 'msg' : True,
