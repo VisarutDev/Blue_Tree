@@ -72,7 +72,7 @@ class GetBookingByAgent(APIView):
     def get(self, request):
         try:
             data = request.GET.get
-            agent = data("agent_name") if data("agent_name") is not None else None
+            agent = data("agent_com") if data("agent_com") is not None else None
             voucher_code = data("voucher_code") if data("voucher_code") is not None else None
             booking_id = data("booking_id") if data("booking_id") is not None else None
             customer_first_name = data("customer_first_name") if data("customer_first_name") is not None else None
