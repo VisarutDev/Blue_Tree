@@ -12,6 +12,7 @@ import base64
 from django.core.files.base import ContentFile
 from io import StringIO, BytesIO
 import io
+from datetime import datetime
 
 # Create your views here.
 class CreateToken(APIView):
@@ -115,29 +116,47 @@ class GetBookingByChoose(APIView):
         try:
             data = request.GET.get
             choose = data('type_choose')
-            if choose == 1: #agent
+            if choose == '1': #agent
+                print('agent')
                 agent_code = data('agent_code')
                 voucher_code = data('voucher_code')
-                filter = Q(booking_agent_com = agent_code) & Q(booking_voucher_code = voucher_code)
-            elif choose == 2: #gropup
-                print("test222")
-            elif choose == 3: #OTAs
+                if voucher_code and agent_code:
+                    filter = Q(booking_agent_com = agent_code) & Q(booking_voucher_code = voucher_code)
+                elif agent_code:
+                    filter = Q(booking_agent_com = agent_code)
+                else:
+                    filter = Q(booking_voucher_code = voucher_code)
+            elif choose == '2': #gropup
+                print('gropup')
+            elif choose == '3': #OTAs
+                print('OTAs')
                 booking_number = data('booking_number')
                 filter = Q(booking_booking_id = booking_number)
-            elif choose == 4: #line
+            elif choose == '4': #line
+                print('line')
                 booking_number = data('booking_number')
                 filter = Q(booking_booking_id = booking_number)
-            elif choose == 5: #walk in
+            elif choose == '5': #walk in
+                print('walk in')
                 voucher_code = data('voucher_code')
                 filter = Q(booking_voucher_code = voucher_code)
-            elif choose == 6: #member
+            elif choose == '6': #member
+                print('member')
                 first_name = data('first_name')
                 last_name = data('last_name')
                 filter = Q(booking_customer_first_name = first_name) and Q(booking_customer_last_name = last_name)
-            elif choose == 7: #voucher
+            elif choose == '7': #voucher
+                print('voucher')
                 voucher_code = data('voucher_code')
                 filter = Q(booking_voucher_code = voucher_code)
-            get_booking = UserBooking.objects.using(db_blue_tree).filter(filter).jsonFormat()
+            try:
+                if choose != '2':
+                    print(filter)
+                    get_booking = UserBooking.objects.using(db_blue_tree).filter(filter).values()
+                else:
+                    get_booking = 'upload success'
+            except:
+                get_booking = "no booking"
             res = {
                 'msg' : True,
                 'data' : get_booking
@@ -214,6 +233,7 @@ class FromForDetails(APIView):
                 for guest, info_list in zip(guests,get_info_list):
                     data_list = []
                     data_list = {
+                            # 'info_list_booking_id' : booking,
                             'info_list_first_name' : guest['first_name'],
                             'info_list_last_name' : guest['last_name'],
                             'info_list_age' : guest['age'],
@@ -230,24 +250,20 @@ class FromForDetails(APIView):
                         print('create')
                     data_guest_list.append(data_list)
             else:
-                pass
-                # image_64_encode = data['file']
-                # format,imgstr = image_64_encode.split(';base64,')
-                # image_ascii = imgstr.encode("ascii")
-                # decoded = base64.decodebytes(image_ascii)
-                # raw_img_io = io.BytesIO(decoded)
-                # imgstr = Image.open(raw_img_io)
-                # imgstr = imgstr.resize((480, 320))
-                # img_io = io.BytesIO()
-                # imgstr.save(img_io, format.split("/")[1], quality=80)
-                # store_image = ContentFile(img_io.getvalue(), name= str(payload['user_id']) + str(datetime.utcnow()) + "." + str(format.split("/")[1]))
-
-                # set_file = ({"store_name":store.store_name_th, "store_receipt":str(img_url)+str(order_file.order_file_store1)})
-                # data_file = {
-                #     'info_detail_file' : set_file,
-                #     'info_detail_file_info' : info_id.info_detail_id
-                # }
-                # InformationDetailFile.objects.using(db_blue_tree).create(**data_file)
+                pdf_64_encode = data['file']
+                format,imgstr = pdf_64_encode.split(';base64,')
+                pdf_ascii = imgstr.encode("ascii")
+                decoded = base64.decodebytes(pdf_ascii)
+                raw_pdf_io = io.BytesIO(decoded)
+                img_io = io.BytesIO()
+                imgstr.save(img_io, format.split("/")[1], quality=80)
+                pdf_guest = ContentFile(img_io.getvalue(), name= str(info_id.info_detail_id) + str(datetime.utcnow()) + "." + str(format.split("/")[1]))
+                data_file = {
+                    'info_detail_file' : pdf_guest,
+                    'info_detail_file_info' : info_id.info_detail_id,
+                    'info_detail_file_booking_id' : booking
+                }
+                InformationDetailFile.objects.using(db_blue_tree).create(**data_file)
 
             res = {
                 'msg' : True,
@@ -265,9 +281,14 @@ class UpdateStatusPolicy(APIView): #api
     def put(self, request):
         try:
             data = request.data
-            booking_id = data['booking_id']
+            booking = data['booking_id']
+            user_booking = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = booking)
+            user_booking.booking_status = True
+            user_booking.save()
+            booking_id = user_booking.booking_id
             booking = InformationDetail.objects.using(db_blue_tree).filter(info_detail_info_id = booking_id).update(info_detail_status = True).values()
-            user_list = InformationDetailList.objects.using(db_blue_tree).filter(info_list_info_id = booking_id).update(info_list_status = True).values()
+            user_list = InformationDetailList.objects.using(db_blue_tree).filter(info_list_booking_id = booking_id).update(info_list_status = True).values()
+            InformationDetailFile.objects.using(db_blue_tree).filter(info_detail_file_booking_id = booking_id).update(info_detail_file_status = True)
             res = {
                 'msg' : True,
                 'data' : {
@@ -289,4 +310,4 @@ class GetTypeGroup(APIView): #api
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
-            return Response(False)
+            return Response(False,status=status.HTTP_401_UNAUTHORIZED)
