@@ -10,5 +10,6 @@ urlpatterns = [
     path('check',views.Apicheck.as_view()),
     path('from_for_details',views.FromForDetails.as_view()),
     path('get/booking/by_agent',views.GetBookingByAgent.as_view()),
-    path('get/test',views.GetTypeGroup.as_view())
+    path('get/test',views.GetTypeGroup.as_view()),
+    path('choose/check_in',views.GetBookingByChoose.as_view())
 ]
