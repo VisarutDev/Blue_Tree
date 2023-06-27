@@ -8,7 +8,7 @@ from .models import *
 from blue_tree.settings import db_blue_tree
 from .utils import create_access_token, create_refresh_token, verify_access_token, verify_refresh_token, Hash
 import base64
-# from PIL import Image
+from PIL import Image
 from django.core.files.base import ContentFile
 from io import StringIO, BytesIO
 import io
@@ -109,7 +109,7 @@ class GetBookingByAgent(APIView):
                 'msg' : False,
                 'data' : 'no booking'
             }
-            return Response(res,status = status.HTTP_401_UNAUTHORIZED)
+            return Response(res,status = status.HTTP_400_BAD_REQUEST)
 
 class GetBookingByChoose(APIView):
     def get(self, request):
@@ -128,6 +128,21 @@ class GetBookingByChoose(APIView):
                     filter = Q(booking_voucher_code = voucher_code)
             elif choose == '2': #gropup
                 print('gropup')
+                # pdf_64_encode = data['file']
+                # format,imgstr = pdf_64_encode.split(';base64,')
+                # pdf_ascii = imgstr.encode("ascii")
+                # decoded = base64.decodebytes(pdf_ascii)
+                # raw_pdf_io = io.BytesIO(decoded)
+                # # imgstr = Image.open(raw_pdf_io)
+                # img_io = io.BytesIO()
+                # imgstr.save(img_io, format.split("/")[1], quality=80)
+                # pdf_guest = ContentFile(img_io.getvalue(), name= str(info_id.info_detail_id) + str(datetime.utcnow()) + "." + str(format.split("/")[1]))
+                # data_file = {
+                #     'info_detail_file' : pdf_guest,
+                #     'info_detail_file_info' : info_id.info_detail_id,
+                #     'info_detail_file_booking_id' : booking
+                # }
+                # InformationDetailFile.objects.using(db_blue_tree).create(**data_file)
             elif choose == '3': #OTAs
                 print('OTAs')
                 booking_number = data('booking_number')
@@ -163,7 +178,7 @@ class GetBookingByChoose(APIView):
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
-            return Response(False,status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'msg':False},status=status.HTTP_400_BAD_REQUEST)
 
 class FromForDetails(APIView):
     def get(self, request): # get draft
@@ -184,7 +199,7 @@ class FromForDetails(APIView):
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
-            return Response({'msg':False},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'msg':False},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request): # save draft and create detail booking
         try:
@@ -233,7 +248,7 @@ class FromForDetails(APIView):
                 for guest, info_list in zip(guests,get_info_list):
                     data_list = []
                     data_list = {
-                            # 'info_list_booking_id' : booking,
+                            'info_list_booking_id' : booking,
                             'info_list_first_name' : guest['first_name'],
                             'info_list_last_name' : guest['last_name'],
                             'info_list_age' : guest['age'],
@@ -254,7 +269,9 @@ class FromForDetails(APIView):
                 format,imgstr = pdf_64_encode.split(';base64,')
                 pdf_ascii = imgstr.encode("ascii")
                 decoded = base64.decodebytes(pdf_ascii)
-                raw_pdf_io = io.BytesIO(decoded)
+                # raw_pdf_io = io.BytesIO(decoded)
+                # imgstr = Image.open(raw_pdf_io)
+                imgstr = decoded
                 img_io = io.BytesIO()
                 imgstr.save(img_io, format.split("/")[1], quality=80)
                 pdf_guest = ContentFile(img_io.getvalue(), name= str(info_id.info_detail_id) + str(datetime.utcnow()) + "." + str(format.split("/")[1]))
@@ -275,7 +292,7 @@ class FromForDetails(APIView):
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
-            return Response(False,status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'msg':False},status=status.HTTP_400_BAD_REQUEST)
 
 class UpdateStatusPolicy(APIView): #api
     def put(self, request):
@@ -283,12 +300,12 @@ class UpdateStatusPolicy(APIView): #api
             data = request.data
             booking = data['booking_id']
             user_booking = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = booking)
-            user_booking.booking_status = True
+            user_booking.booking_status_policy = True
             user_booking.save()
             booking_id = user_booking.booking_id
-            booking = InformationDetail.objects.using(db_blue_tree).filter(info_detail_info_id = booking_id).update(info_detail_status = True).values()
-            user_list = InformationDetailList.objects.using(db_blue_tree).filter(info_list_booking_id = booking_id).update(info_list_status = True).values()
-            InformationDetailFile.objects.using(db_blue_tree).filter(info_detail_file_booking_id = booking_id).update(info_detail_file_status = True)
+            booking = InformationDetail.objects.using(db_blue_tree).filter(info_detail_info_id = booking_id).update(info_detail_status_policy = True).values()
+            user_list = InformationDetailList.objects.using(db_blue_tree).filter(info_list_booking_id = booking_id).update(info_list_status_policy = True).values()
+            InformationDetailFile.objects.using(db_blue_tree).filter(info_detail_file_booking_id = booking_id).update(info_detail_file_status_policy = True)
             res = {
                 'msg' : True,
                 'data' : {
@@ -298,9 +315,9 @@ class UpdateStatusPolicy(APIView): #api
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
-            return Response(False,status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'msg':False},status=status.HTTP_400_BAD_REQUEST)
 
-class GetTypeGroup(APIView): #api
+class GetTypeGroup(APIView):
     def get(self, request):
         try:
             type = TypeGroup.objects.using(db_blue_tree).all().values()
@@ -310,4 +327,4 @@ class GetTypeGroup(APIView): #api
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
-            return Response(False,status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'msg':False},status=status.HTTP_400_BAD_REQUEST)
