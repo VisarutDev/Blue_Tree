@@ -13,8 +13,8 @@ class UserBooking(models.Model):
     booking_tel = models.IntegerField(default=0)
     booking_voucher_code = models.CharField(max_length=55, blank=True, null=True, default=None)
     booking_booking_id = models.CharField(max_length=55, blank=True, null=True, default=None)
-    # booking_status = models.IntegerField(default=0) #0 = waiting for service, 1 = service has been received
-    # booking_status_policy = models.BooleanField(default=False) #Policy
+    booking_status = models.IntegerField(default=0) #0 = waiting for service, 1 = service has been received
+    booking_status_policy = models.BooleanField(default=False) #Policy
     create_at = models.DateTimeField(auto_now_add=True, blank=True)
     update_at = models.DateTimeField(auto_now=True, blank=True)
 
