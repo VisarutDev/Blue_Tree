@@ -225,7 +225,7 @@ class ManageOrderBof(APIView):
 
             if data("search"):
                 search = data('search')
-                orders = orders.filter(Q(order_booking_id = search) or Q(order_customer_name = search))
+                orders = orders.filter(Q(order_booking_id__icontains = search) | Q(order_customer_name__icontains = search))
 
             for index,order in enumerate(orders):
                 channels = channels.filter(channel_type_id = order['order_channel_id']).values()
@@ -376,7 +376,18 @@ class GenOrderCode(APIView):
             channel_id = data('channel')
             channel = ChannelType.objects.using(db_blue_tree).get(channel_type_id = channel_id)
             booking_code = generate_booking(channel.channel_code)
-            return Response(booking_code,status=status.HTTP_200_OK)
+            res = {
+                'msg' : True,
+                'data' : {
+                    'booking_code' : booking_code,
+                    'channel' : {
+                        'channel_type_id' : channel.channel_type_id,
+                        'channel_type_name' : channel.channel_type_name,
+                        'channel_code' : channel.channel_code
+                    }
+                }
+            }
+            return Response(res,status=status.HTTP_200_OK)
         except:
             return Response({'msg':False},status=status.HTTP_400_BAD_REQUEST)
 
