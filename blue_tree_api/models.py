@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 
 class UserBooking(models.Model):
     class Meta:
@@ -41,7 +42,9 @@ class TypeGroup(models.Model):
         db_table = 'type_group'
     type_group_id = models.AutoField(primary_key=True)
     type_group_people = models.IntegerField(default=0)
-    type_group_detail = models.CharField(max_length=20)
+    type_group_people_max = models.IntegerField(null=True)
+    # type_group_detail = models.CharField(max_length=20)
+    type_group_detail = JSONField()
     type_group_status = models.BooleanField(default=True)
     type_group_file = models.BooleanField(default=False)
     create_at = models.DateTimeField(auto_now_add=True, blank=True)
@@ -52,8 +55,10 @@ class InformationDetail(models.Model):
     info_detail_id = models.AutoField(primary_key=True)
     info_detail_country = models.CharField(max_length=100, blank=True, null=True)
     info_detail_live_phuket = models.BooleanField(default=False)
-    info_detail_people = models.IntegerField(default=0)
-    info_detail_type = models.ForeignKey(TypeGroup, related_name='info_detail_type_id', on_delete=models.DO_NOTHING, null=True, blank=True)
+    # info_detail_people = models.IntegerField(default=0)
+    # info_detail_type = models.ForeignKey(TypeGroup, related_name='info_detail_type_id', on_delete=models.DO_NOTHING, null=True, blank=True)
+    info_detail_people = models.CharField(max_length=20)
+    info_detail_type = models.CharField(max_length=20)
     info_detail_info = models.ForeignKey(UserBooking, related_name='info_detail_booking_id', on_delete=models.DO_NOTHING, null=True, blank=True)
     info_detail_status_policy = models.BooleanField(default=False) #Policy
     create_at = models.DateTimeField(auto_now_add=True, blank=True)

@@ -208,11 +208,11 @@ class FromForDetails(APIView):
             guests = data['guest']
             data_booking = {
                 'booking_customer_first_name' : guests[0]['first_name'],
-                'booking_customer_last_name' : guests[0]['last_name'],
+                'booking_customer_last_name' : guests[0]['last_name'] if 'last_name' in guests[0] else None,
                 'booking_age' : guests[0]['age'],
                 'booking_gender' : guests[0]['gender'],
                 'booking_email' : guests[0]['Email'],
-                'booking_tel' : guests[0]['tel'],
+                'booking_tel' : guests[0]['tel'] if 'tel' in guests[0] else None,
                 'booking_booking_id' : data['booking_id'] if 'booking_id' in data else None
             }
             # booking_id, update = UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update_or_create(**data_booking)
@@ -320,7 +320,10 @@ class UpdateStatusPolicy(APIView): #api
 class GetTypeGroup(APIView):
     def get(self, request):
         try:
+            data = request.GET.get
             type = TypeGroup.objects.using(db_blue_tree).all().values()
+            if data('type_group_id'):
+                type = type.filter(type_group_id = data('type_group_id'))
             res = {
                 'msg' : True,
                 'data' : type
