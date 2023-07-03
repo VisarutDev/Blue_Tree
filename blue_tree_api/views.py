@@ -217,14 +217,14 @@ class FromForDetails(APIView):
             }
             # booking_id, update = UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update_or_create(**data_booking)
             try:
-                booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = data['booking_id'])
+                booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = data['booking_id']).booking_id
                 UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update(**data_booking)
                 print("update")
             except:
                 user_booking = UserBooking.objects.using(db_blue_tree).create(**data_booking)
-                # booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = user_booking.booking_id)
+                booking_id = user_booking.booking_id
                 print("create")
-            booking = user_booking.booking_id
+            booking = booking_id
             data_detail = {
                 'info_detail_info_id' : booking,
                 'info_detail_country' : data['country'] if "country" in data else None,
@@ -243,7 +243,6 @@ class FromForDetails(APIView):
                 get_info_list = data['guest']
 
             type_group = TypeGroup.objects.using(db_blue_tree).get(type_group_id = data['people'])
-            # if data['people'] < 10:
             if type_group.type_group_file == False:
                 for guest, info_list in zip(guests,get_info_list):
                     data_list = []
