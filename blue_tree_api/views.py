@@ -221,16 +221,16 @@ class FromForDetails(APIView):
                 UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update(**data_booking)
                 print("update")
             except:
-                UserBooking.objects.using(db_blue_tree).create(**data_booking)
-                booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = data['booking_id'])
+                user_booking = UserBooking.objects.using(db_blue_tree).create(**data_booking)
+                # booking_id = UserBooking.objects.using(db_blue_tree).get(booking_booking_id = user_booking.booking_id)
                 print("create")
-            booking = booking_id.booking_id
+            booking = user_booking.booking_id
             data_detail = {
                 'info_detail_info_id' : booking,
                 'info_detail_country' : data['country'] if "country" in data else None,
                 'info_detail_live_phuket' : data['live_in'] if "live_in" in data else None,
                 'info_detail_people' : data['people'] if "people" in data else None,
-                'info_detail_type_id' : data['with'] if "with" in data else None
+                'info_detail_type' : data['with'] if "with" in data else None
             }
             info_id ,update = InformationDetail.objects.using(db_blue_tree).filter(info_detail_info = booking).update_or_create(**data_detail)
             del guests[0]
@@ -241,10 +241,10 @@ class FromForDetails(APIView):
 
             if len(get_info_list) == 0:
                 get_info_list = data['guest']
-            
-            type_group = TypeGroup.objects.using(db_blue_tree).filter(type_group_people__gte = data['people'])
+
+            type_group = TypeGroup.objects.using(db_blue_tree).get(type_group_id = data['people'])
             # if data['people'] < 10:
-            if type_group.type_group_file:
+            if type_group.type_group_file == False:
                 for guest, info_list in zip(guests,get_info_list):
                     data_list = []
                     data_list = {
@@ -320,13 +320,30 @@ class UpdateStatusPolicy(APIView): #api
 class GetTypeGroup(APIView):
     def get(self, request):
         try:
+            collect_type = []
             data = request.GET.get
-            type = TypeGroup.objects.using(db_blue_tree).all().values()
+            types = TypeGroup.objects.using(db_blue_tree).all()
             if data('type_group_id'):
-                type = type.filter(type_group_id = data('type_group_id'))
+                try:
+                    types = types.filter(type_group_id = data('type_group_id')).values()
+                    collect_type = {
+                        'type_group_people' : types[0]['type_group_people'],
+                        'type' : types[0]
+                    }
+                except:
+                    collect_type = "no have type_group_id"
+            else :
+                types_people = types.values_list('type_group_people', flat=True).distinct()
+                for type in types_people:
+                    types_data = types.filter(type_group_people = type).values()
+                    data_type = {
+                        'type_group_people' : type,
+                        'type' : types_data
+                    }
+                    collect_type.append(data_type)
             res = {
                 'msg' : True,
-                'data' : type
+                'data' : collect_type
             }
             return Response(res,status=status.HTTP_200_OK)
         except:
