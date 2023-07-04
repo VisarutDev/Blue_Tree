@@ -213,7 +213,9 @@ class FromForDetails(APIView):
                 'booking_gender' : guests[0]['gender'],
                 'booking_email' : guests[0]['Email'],
                 'booking_tel' : guests[0]['tel'] if 'tel' in guests[0] else None,
-                'booking_booking_id' : data['booking_id'] if 'booking_id' in data else None
+                'booking_booking_id' : data['booking_id'] if 'booking_id' in data else None,
+                'booking_voucher_code' : data['voucher_code'] if 'voucher_code' in data else None,
+                'booking_agent_com' : data['agent_code'] if 'agent_code' in data else None
             }
             # booking_id, update = UserBooking.objects.using(db_blue_tree).filter(booking_booking_id = data['booking_id']).update_or_create(**data_booking)
             try:
