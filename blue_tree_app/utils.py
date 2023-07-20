@@ -56,7 +56,7 @@ def create_access_token(user):
 def create_refresh_token(user):
     payload = {
         'user_id': user,
-        'exp': datetime.utcnow() + timedelta(day=JWT_EXP_DELTA_SECONDS_REFRESH)
+        'exp': datetime.utcnow() + timedelta(days=JWT_EXP_DELTA_SECONDS_REFRESH)
     }
     jwt_token = jwt.encode(payload, JWT_REFRESH, JWT_ALGORITHM)
     token = jwt_token.decode('utf-8')
