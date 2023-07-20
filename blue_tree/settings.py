@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import pymysql
+import os
 pymysql.install_as_MySQLdb()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'blue_tree_api',
     'blue_tree_bof',
+    'blue_tree_app',
     'rest_framework',
     'corsheaders'
 ]
@@ -63,7 +65,7 @@ ROOT_URLCONF = 'blue_tree.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [ os.path.join(BASE_DIR, 'Templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,7 +78,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'blue_tree.wsgi.application'
 
 
 # Database
@@ -115,6 +116,14 @@ DATABASES = {
     #     'PORT': '3306',
     #     'OPTIONS': {'charset': 'utf8mb4'}
     # },
+    # 'default' : {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME' : 'bluetree01',
+    #     'USER': 'admin',
+    #     'PASSWORD': 'zaq12wsx',
+    #     'HOST': 'dev-weserve.c139cngshqyr.ap-southeast-1.rds.amazonaws.com',
+    #     'PORT': '3306',
+    # }
 }
 
 

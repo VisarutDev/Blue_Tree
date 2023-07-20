@@ -6,7 +6,6 @@ from rest_framework import status
 from django.db.models import Q
 from .models import *
 from blue_tree.settings import db_blue_tree
-from .utils import create_access_token, create_refresh_token, verify_access_token, verify_refresh_token, Hash
 import base64
 from PIL import Image
 from django.core.files.base import ContentFile
@@ -15,60 +14,6 @@ import io
 from datetime import datetime
 
 # Create your views here.
-class CreateToken(APIView):
-    def get(self, request):
-        access_token = create_access_token(2)
-        refresh_token = create_refresh_token(2)
-        res = {
-            "msg" : True,
-            "token" : access_token
-        }
-
-        response = Response()
-        response.set_cookie(key = 'refreshToken',value =refresh_token, httponly=True)
-        response.data = {
-            'token' : res
-        }
-        return response
-class RefreshTokenAPI(APIView):
-    def post(self, request):
-        refresh_token = verify_refresh_token(request)
-        access_token = create_access_token(refresh_token)
-        res = {
-            'access_token' : access_token
-        }
-        return Response(res)
-
-class UserTestRefreshToken(APIView):
-    def get(self, request):
-        payload = verify_access_token(request)
-        if payload != False:
-            res = "success"
-        else :
-            res = "false"
-        return Response(res)
-
-class Register(APIView):
-    def post(self, request):
-        data = request.data
-        print(data)
-        password = Hash.hash_password(data['password'])
-        check = Hash.check_password(password,data['password'])
-        res = {
-            "pass_word" : password,
-            "check_pass" : check
-        }
-        return Response(res)
-
-class Apicheck(APIView):
-    def get(self, request):
-        payload = verify_access_token(request)
-        if payload != False:
-            data = request.data
-            return Response(data)
-        else:
-            return Response(False)
-
 class GetBookingByAgent(APIView):
     def get(self, request):
         try:
@@ -79,7 +24,7 @@ class GetBookingByAgent(APIView):
             customer_first_name = data("customer_first_name") if data("customer_first_name") is not None else None
             customer_last_name = data("customer_last_name") if data("customer_last_name") is not None else None
             email = data("email") if data("email") is not None else None
-            booking_data = UserBooking.objects.using(db_blue_tree).all()
+            booking_data = UserBooking.objects.using(db_blue_tree).filter(booking_status = 0,booking_status_policy = False)
             if booking_id != None:
                 print("booking")
                 booking_data = booking_data.filter(booking_booking_id = booking_id)

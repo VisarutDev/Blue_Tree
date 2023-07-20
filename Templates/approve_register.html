@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv=Content-Type content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <title>Verify Registration Identity</title>
+</head>
+
+<style>
+
+</style>
+
+<body>
+    <!-- <div style="background-color: #FDDF00; margin-bottom: 40px;">
+        <img src="https://storage.googleapis.com/v4-weserve/logo/merchant-img/merchant_logo_nav.png" />
+    </div> -->
+    <div>
+        <div>
+            <b>Verify Registration Identity</b><br /><br />
+            Blue Tree ได้รับข้อมูลการลงทะเบียนของคุณ <b>{{ user_name }}</b> เป็นที่เรียบร้อยเเล้ว<br /><br />
+        </div>
+        <div>
+            (เพื่อเป็นการรักษาความปลอดภัย กรุณาเก็บรักษาข้อมูลส่วนตัวและรหัสผ่านไว้เป็นความลับ
+            รวมถึงการเปลี่ยนรหัสผ่านของคุณเพื่อป้องกันบัญชีผู้ใช้งาน)<br /><br />
+
+            ยืนยันตัวตนได้ที่ลิ้งนี้
+            <br />
+            <a href="localhost:8000/api/blue_tree/app/confirm_email" method = "get">
+                confirm_user</a><br />
+
+            <br /><br /><br />
+            <b>Blue Tree TEAM</b>
+            <br /><br /><br />
+        </div>
+    </div>
+
+    <div>
+        <div>
+            <b>Verify Registration Identity</b><br /><br />
+            Blue Tree received your registration information for {{ user_name }}. <br/><br/>
+        </div>
+        <div>
+            (Please keep your personal information and password confidential and changing your password to protect your
+            account)<br /><br />
+
+
+            Verify your identity at this link.!
+            <br />
+            <a href="localhost:8000/api/blue_tree/app/confirm_email" method = "get">
+                confirm_user</a><br />
+            
+
+        </div>
+    </div>
+    <!-- (แนบไฟล์วิธีการเปิดร้านผ่าน WESERVE MERCHANT ให้อีกครั้ง) -->
+</body>
+
+</html>
