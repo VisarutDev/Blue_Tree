@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .models import *
 from blue_tree.settings import db_blue_tree
 from .utils import generate_booking, UploadImage
+from blue_tree_app.utils import Hash
 # import io
 # import base64
 # from PIL import Image
@@ -439,3 +440,503 @@ class GetChannelType(APIView):
             return Response(res,status=status.HTTP_200_OK)
         except:
             return Response({'msg':False},status=status.HTTP_400_BAD_REQUEST)
+class ManagePromotion(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            promotion_id = data('promotion_id')
+            get_promotion = PromotionApp.objects.using(db_blue_tree).filter(promotion_id = promotion_id, delete_at = None).values()
+            get_promotion[0]['promotion_image'] = str(get_promotion[0]['promotion_image'])
+            res = {
+                'msg' : True,
+                'data' : get_promotion[0]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+            get_promotion = PromotionApp.objects.using(db_blue_tree).filter(promotion_id = data['promotion_id'])
+            if data['promotion_image']:
+                promotion_img = data['promotion_image']
+                get_image = PromotionApp.objects.using(db_blue_tree).get(promotion_id = data['promotion_id'])
+                name = str("promotion") + str(data['promotion_id']) + "_" + str(date_time)
+                promotion_img = UploadImage(promotion_img,name)
+                get_image.promotion_image = promotion_img
+                get_image.save()
+
+            data_promotion = {
+                'promotion_code' : data['promotion_code'],
+                'promotion_name_th' : data['promotion_name_th'],
+                'promotion_name_en' : data['promotion_name_en'],
+                'promotion_description_th' : data['promotion_description_th'],
+                'promotion_description_en' : data['promotion_description_en'],
+                'promotion_discount_price' : data['promotion_discount_price'],
+                'promotion_status' : data['promotion_status'],
+                'promotion_date_start' : data['promotion_date_start'],
+                'promotion_date_end' : data['promotion_date_end'],
+                'promotion_maximum_discount' : data['promotion_maximum_discount'],
+                'update_at' : date_time
+            }
+            get_promotion.update(**data_promotion)
+            get_promotion = get_promotion.values()
+            get_promotion[0]['promotion_image'] = str(get_promotion[0]['promotion_image'])
+            res = {
+                'msg' : True,
+                'data' : get_promotion[0]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+            if data['promotion_image']:
+                promotion_img = data['promotion_image']
+                name = str("promotion") + "_" + str(date_time)
+                promotion_img = UploadImage(promotion_img,name)
+            else:
+                promotion_img = None
+
+            data_promotion = {
+                'promotion_code' : data['promotion_code'],
+                'promotion_name_th' : data['promotion_name_th'] if 'promotion_name_th' in data else None,
+                'promotion_name_en' : data['promotion_name_en'] if 'promotion_name_en' in data else None,
+                'promotion_description_th' : data['promotion_description_th'] if 'promotion_description_th' in data else None,
+                'promotion_description_en' : data['promotion_description_en'] if 'promotion_description_en' in data else None,
+                'promotion_discount_price' : data['promotion_discount_price'] if 'promotion_discount_price' in data else None,
+                'promotion_status' : data['promotion_status'] if 'promotion_status' in data else 1,
+                'promotion_date_start' : data['promotion_date_start'] if 'promotion_date_start' in data else None,
+                'promotion_date_end' : data['promotion_date_end'] if 'promotion_date_end' in data else None,
+                'promotion_maximum_discount' : data['promotion_maximum_discount'] if 'promotion_maximum_discount' in data else None,
+                'promotion_image' : promotion_img
+            }
+            promotion = PromotionApp.objects.using(db_blue_tree).create(**data_promotion)
+            data_promotion['promotion_id'] = promotion.promotion_id
+            data_promotion['promotion_image'] = str(data_promotion['promotion_image'])
+            res = {
+                'msg' : True,
+                'data' : data_promotion
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        try:
+            data = request.GET.get
+            date_time = datetime.now()
+            promotion = PromotionApp.objects.using(db_blue_tree).get(promotion_id = data('promotion_id'))
+            promotion.delete_at = date_time
+            promotion.promotion_status = 2
+            promotion.save()
+            res = {
+                'msg' : True,
+                'data' : "delete success promotion id " + str(data('promotion_id'))
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangStatusPromotion(APIView):
+    def put(self, request):
+        try:
+            data = request.data
+            promotion = PromotionApp.objects.using(db_blue_tree).get(promotion_id = data['promotion_id'], delete_at = None)
+            promotion.promotion_status = data['promotion_status']
+            promotion.save()
+            res = {
+                'msg' : True,
+                'data' : "change status success promotion id " + str(data['promotion_id']) + " status " + str(data['promotion_status'])
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+class GetAllPromotion(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            page_size = int(data("page_size"))
+            current_page = int(data("current_page"))
+            promotions = PromotionApp.objects.using(db_blue_tree).filter(~Q(promotion_status = 2),delete_at = None)
+            for promotion in promotions:
+                promotion.promotion_image = str(promotion.promotion_image)
+            promotions = promotions.values()
+            res = {
+                'msg' : True,
+                'data' : promotions[page_size * (current_page - 1): page_size * current_page]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+class ManageHappening(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            happening_id = data('happening_id')
+            get_happening = HappeningApp.objects.using(db_blue_tree).filter(happening_id = happening_id, delete_at = None).values()
+            get_happening[0]['happening_image'] = str(get_happening[0]['happening_image'])
+            res = {
+                'msg' : True,
+                'data' : get_happening[0]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+            get_happening = HappeningApp.objects.using(db_blue_tree).filter(happening_id = data['happening_id'])
+            if data['happening_image']:
+                get_image = HappeningApp.objects.using(db_blue_tree).get(happening_id = data['happening_id'])
+                happening_img = data['happening_image']
+                name = str("happening") + "_" + str(date_time)
+                happening_img = UploadImage(happening_img,name)
+                get_image.happening_image = happening_img
+                get_image.save()
+
+            data_happening = {
+                'happening_name_th' : data['happening_name_th'],
+                'happening_name_en' : data['happening_name_en'],
+                'happening_description_th' : data['happening_description_th'],
+                'happening_description_en' : data['happening_description_en'],
+                'happening_discount_price' : data['happening_discount_price'],
+                'happening_status' : data['happening_status'],
+                'happening_product' : data['happening_product'],
+                'update_at' : date_time
+            }
+            get_happening.update(**data_happening)
+            get_happening = get_happening.values()
+            get_happening[0]['happening_image'] = str(get_happening[0]['happening_image'])
+            res = {
+                'msg' : True,
+                'data' : get_happening[0]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+            if data['happening_image']:
+                happening_img = data['happening_image']
+                name = str("happening") + "_" + str(date_time)
+                happening_img = UploadImage(happening_img,name)
+            else:
+                happening_img = None
+
+            data_happening = {
+                'happening_name_th' : data['happening_name_th'] if 'happening_name_th' in data else None,
+                'happening_name_en' : data['happening_name_en'] if 'happening_name_en' in data else None,
+                'happening_description_th' : data['happening_description_th'] if 'happening_description_th' in data else None,
+                'happening_description_en' : data['happening_description_en'] if 'happening_description_en' in data else None,
+                'happening_discount_price' : data['happening_discount_price'] if 'happening_discount_price' in data else None,
+                'happening_status' : data['happening_status'] if 'happening_status' in data else 1,
+                'happening_product' : data['happening_product'] if 'happening_product' in data else None,
+                'happening_image' : happening_img
+            }
+            happening = HappeningApp.objects.using(db_blue_tree).create(**data_happening)
+            data_happening['happening_id'] = happening.happening_id
+            data_happening['happening_image'] = str(data_happening['happening_image'])
+            res = {
+                'msg' : True,
+                'data' : data_happening
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        try:
+            data = request.GET.get
+            date_time = datetime.now()
+            happening = HappeningApp.objects.using(db_blue_tree).get(happening_id = data('happening_id'))
+            happening.delete_at = date_time
+            happening.happening_status = 2
+            happening.save()
+            res = {
+                'msg' : True,
+                'data' : "delete success happening id " + str(data('happening_id'))
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+class ChangStatusHappening(APIView):
+    def put(self, request):
+        try:
+            data = request.data
+            happening = HappeningApp.objects.using(db_blue_tree).get(happening_id = data['happening_id'], delete_at = None)
+            happening.happening_status = data['happening_status']
+            happening.save()
+            res = {
+                'msg' : True,
+                'data' : "change status success happening id " + str(data['happening_id']) + " status " + str(data['happening_status'])
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+class GetAllHappening(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            page_size = int(data("page_size"))
+            current_page = int(data("current_page"))
+            happenings = HappeningApp.objects.using(db_blue_tree).filter(~Q(happening_status = 2),delete_at = None)
+            for happening in happenings:
+                happening.happening_image = str(happening.happening_image)
+            happenings = happenings.values()
+            res = {
+                'msg' : True,
+                'data' : happenings[page_size * (current_page - 1): page_size * current_page]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+class ManageBanner(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            banner_id = data('banner_id')
+            get_banner = BannerApp.objects.using(db_blue_tree).filter(banner_id = banner_id, delete_at = None).values()
+            get_banner[0]['banner_image'] = str(get_banner[0]['banner_image'])
+            res = {
+                'msg' : True,
+                'data' : get_banner[0]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+            get_banner = BannerApp.objects.using(db_blue_tree).filter(banner_id = data['banner_id'])
+            if data['banner_image']:
+                get_image = BannerApp.objects.using(db_blue_tree).get(banner_id = data['banner_id'])
+                banner_img = data['banner_image']
+                name = str("banner") + "_" + str(date_time)
+                banner_img = UploadImage(banner_img,name)
+                get_image.banner_image = banner_img
+                get_image.save()
+
+            data_banner = {
+                'banner_name_th' : data['banner_name_th'],
+                'banner_name_en' : data['banner_name_en'],
+                'banner_description_th' : data['banner_description_th'],
+                'banner_description_en' : data['banner_description_en'],
+                'banner_status' : data['banner_status'],
+                'update_at' : date_time
+            }
+            get_banner.update(**data_banner)
+            get_banner = get_banner.values()
+            get_banner[0]['banner_image'] = str(get_banner[0]['banner_image'])
+            res = {
+                'msg' : True,
+                'data' : get_banner[0]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+            if data['banner_image']:
+                banner_img = data['banner_image']
+                name = str("banner") + "_" + str(date_time)
+                banner_img = UploadImage(banner_img,name)
+            else:
+                banner_img = None
+
+            data_banner = {
+                'banner_name_th' : data['banner_name_th'] if 'banner_name_th' in data else None,
+                'banner_name_en' : data['banner_name_en'] if 'banner_name_en' in data else None,
+                'banner_description_th' : data['banner_description_th'] if 'banner_description_th' in data else None,
+                'banner_description_en' : data['banner_description_en'] if 'banner_description_en' in data else None,
+                'banner_status' : data['banner_status'] if 'banner_status' in data else 1,
+                'banner_image' : banner_img
+            }
+            banner = BannerApp.objects.using(db_blue_tree).create(**data_banner)
+            data_banner['banner_id'] = banner.banner_id
+            data_banner['banner_image'] = str(data_banner['banner_image'])
+            res = {
+                'msg' : True,
+                'data' : data_banner
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        try:
+            data = request.GET.get
+            date_time = datetime.now()
+            banner = BannerApp.objects.using(db_blue_tree).get(banner_id = data('banner_id'))
+            banner.delete_at = date_time
+            banner.banner_status = 2
+            banner.save()
+            res = {
+                'msg' : True,
+                'data' : "delete success banner id " + (data('banner_id'))
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+class ChangStatusBanner(APIView):
+    def put(self, request):
+        try:
+            data = request.data
+            banner = BannerApp.objects.using(db_blue_tree).get(banner_id = data['banner_id'], delete_at = None)
+            banner.banner_status = data['banner_status']
+            banner.save()
+            res = {
+                'msg' : True,
+                'data' : "change status success banner id " + str(data['banner_id']) + " status " + str(data['banner_status'])
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            raise
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+class GetAllBanner(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            page_size = int(data("page_size"))
+            current_page = int(data("current_page"))
+            banners = BannerApp.objects.using(db_blue_tree).filter(~Q(banner_status = 2),delete_at = None)
+            for banner in banners:
+                banner.banner_image = str(banner.banner_image)
+            banners = banners.values()
+            res = {
+                'msg' : True,
+                'data' : banners[page_size * (current_page - 1): page_size * current_page]
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            return Response(False, status=status.HTTP_400_BAD_REQUEST)
+class ManageUsers(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            users_id = data('users_id')
+            get_users = Users.objects.using(db_blue_tree).filter(users_id = users_id, delete_at = None)
+            get_users[0].users_image = str(get_users[0].users_image)
+            get_users = get_users.values()
+            res = {
+                'msg' : True,
+                'data' : get_users[0]
+            }
+            return Response(res,status=status.HTTP_200_OK)
+        except:
+            return Response(False,status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+            get_users = Users.objects.using(db_blue_tree).filter(users_id = data['users_id'])
+
+            if data['users_image']:
+                get_image = Users.objects.using(db_blue_tree).get(users_id = data['users_id'])
+                users_img = data['users_image']
+                name = str("users") + "_" + str(date_time)
+                users_img = UploadImage(users_img,name)
+                get_image.users_image = users_img
+                get_image.save()
+
+            users_password = Hash.hash_password(data['users_password'])
+
+            data_users = {
+                'users_status':data['users_status'],
+                'users_first_name' : data['users_first_name'],
+                'users_last_name' : data['users_last_name'],
+                'users_email' : data['users_email'],
+                'users_password' : users_password,
+                'users_tel' : data['users_tel'],
+                'users_role':data['users_role'],
+                'update_at' : date_time
+            }
+            get_users.update(**data_users)
+            get_users = get_users.values()
+            res = {
+                'msg' : True,
+                'data' : get_users[0]
+            }
+            return Response(res,status=status.HTTP_200_OK)
+        except:
+            return Response(False,status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        try:
+            data = request.data
+            date_time = datetime.now()
+
+            if data['users_image']:
+                users_img = data['users_image']
+                name = str("users") + "_" + str(date_time)
+                users_img = UploadImage(users_img,name)
+
+            users_password = Hash.hash_password(data['users_password'])
+
+            data_users = {
+                'users_status':data['users_status'],
+                'users_first_name' : data['users_first_name'],
+                'users_last_name' : data['users_last_name'],
+                'users_email' : data['users_email'],
+                'users_password' : users_password,
+                'users_tel' : data['users_tel'],
+                'users_role':data['users_role'],
+                'users_image' : users_img
+            }
+            users = Users.objects.using(db_blue_tree).create(**data_users)
+            data_users['users_image'] = str(data_users['users_image'])
+            data_users['users_id'] = users.users_id
+            res = {
+                'msg' : True,
+                'data' : data_users
+            }
+            return Response(res,status=status.HTTP_200_OK)
+        except:
+            return Response(False,status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request):
+        try:
+            data = request.GET.get
+            date_time = datetime.now()
+            get_users = Users.objects.using(db_blue_tree).get(users_id = data('users_id'))
+            get_users.users_status = 2
+            get_users.delete_at = date_time
+            get_users.save()
+            res = {
+                'msg' : True,
+                'data' : "Delete success users id " + str(data('users_id'))
+            }
+            return Response(res,status=status.HTTP_200_OK)
+        except:
+            return Response(False,status=status.HTTP_400_BAD_REQUEST)
+class GetAllUser(APIView):
+    def get(self, request):
+        try:
+            data = request.GET.get
+            page_size = int(data('page_size'))
+            current_page = int(data('current_page'))
+            get_users = Users.objects.using(db_blue_tree).filter(users_status__in = [0,1], delete_at = None)
+            for user in get_users:
+                user.users_image = str(user.users_image)
+            get_users = get_users.values()
+            res = {
+                'msg' : True,
+                'data' : get_users[page_size * (current_page - 1) : page_size * current_page]
+            }
+            return Response(res,status=status.HTTP_200_OK)
+        except:
+            return Response(False,status=status.HTTP_400_BAD_REQUEST)
